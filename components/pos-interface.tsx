@@ -8,8 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { Plus, Minus, Trash2, Search, Barcode, CreditCard, ShoppingCart, X, Package, LogOut, Clock } from "lucide-react"
-import { getProducts, searchProducts, searchProductByBarcode, createSale, getBusinessSettings, getSales, deleteSale } from "@/lib/database"
+import { Plus, Minus, Trash2, Search, Barcode, CreditCard, ShoppingCart, X, Package, LogOut } from "lucide-react"
+import { getProducts, searchProducts, searchProductByBarcode, createSale, getBusinessSettings } from "@/lib/database"
 import type { Product, BusinessSettings, SaleWithItems } from "@/lib/database-types"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/auth-context"
@@ -44,20 +44,16 @@ export function POSInterface() {
   const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null)
   const [lastCompletedSale, setLastCompletedSale] = useState<any>(null)
   const [showPrintDialog, setShowPrintDialog] = useState(false)
-  const [products, setProducts] = useState<Product[]>([])
-  const [isLoadingProducts, setIsLoadingProducts] = useState(true)
-  const [recentSales, setRecentSales] = useState<SaleWithItems[]>([])
-  const [isLoadingRecentSales, setIsLoadingRecentSales] = useState(false)
-  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
+   const [products, setProducts] = useState<Product[]>([])
+   const [isLoadingProducts, setIsLoadingProducts] = useState(true)
   const receiptRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const barcodeInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    loadBusinessSettings()
-    loadProducts()
-    loadRecentSales()
-  }, [])
+   useEffect(() => {
+     loadBusinessSettings()
+     loadProducts()
+   }, [])
 
   const loadBusinessSettings = async () => {
     try {
@@ -81,43 +77,9 @@ export function POSInterface() {
     }
   }
 
-  const loadRecentSales = async () => {
-    try {
-      setIsLoadingRecentSales(true)
-      const today = new Date()
-      const dateStr = format(today, 'yyyy-MM-dd')
-      const sales = await getSales(dateStr, dateStr)
-      // Get the 5 most recent sales
-      const sortedSales = sales.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      setRecentSales(sortedSales.slice(0, 5))
-    } catch (error) {
-      console.error("Failed to load recent sales:", error)
-    } finally {
-      setIsLoadingRecentSales(false)
-    }
-  }
 
-  const handleDeleteSale = async (saleId: string) => {
-    if (!window.confirm("Are you sure you want to delete this sale?")) {
-      return
-    }
 
-    setDeletingIds(prev => new Set(prev).add(saleId))
-    try {
-      await deleteSale(saleId)
-      toast.success("Sale deleted successfully")
-      loadRecentSales()
-    } catch (error) {
-      console.error("Failed to delete sale:", error)
-      toast.error("Failed to delete sale")
-    } finally {
-      setDeletingIds(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(saleId)
-        return newSet
-      })
-    }
-  }
+
 
   const handleSearch = async (query: string) => {
     setSearchTerm(query)
@@ -290,16 +252,13 @@ export function POSInterface() {
 
       toast.success("Sale completed successfully!")
 
-      // Clear cart and close dialog
-      setCart([])
-      setSelectedItem(null)
-      setCustomerName("Walk-in Customer")
-      setIsPaymentDialogOpen(false)
+       // Clear cart and close dialog
+       setCart([])
+       setSelectedItem(null)
+       setCustomerName("Walk-in Customer")
+       setIsPaymentDialogOpen(false)
 
-      // Reload recent sales
-      loadRecentSales()
-
-      // Show print dialog
+       // Show print dialog
       setTimeout(() => {
         setShowPrintDialog(true)
       }, 500)
@@ -569,57 +528,7 @@ export function POSInterface() {
           </div>
         </div>
 
-        {/* Recent Sales Section */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 overflow-hidden">
-          <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/50">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-50 rounded-lg sm:rounded-xl flex items-center justify-center">
-                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-              </div>
-              <h2 className="text-base sm:text-lg font-bold text-slate-900">Recent Sales</h2>
-            </div>
-          </div>
 
-          <div className="p-4 sm:p-5 space-y-2">
-            {isLoadingRecentSales ? (
-              <div className="text-center py-8 text-slate-500">
-                <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600 mx-auto"></div>
-              </div>
-            ) : recentSales.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
-                <Clock className="h-8 w-8 sm:h-10 sm:w-10 mx-auto mb-2 opacity-20" />
-                <p className="text-xs sm:text-sm">No sales today</p>
-              </div>
-            ) : (
-              recentSales.map((sale) => (
-                <div
-                  key={sale.id}
-                  className="flex items-center justify-between p-3 border border-slate-100 rounded-lg hover:bg-slate-50 transition-colors"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate">{sale.sale_number}</div>
-                    <div className="text-xs text-slate-500">
-                      {format(new Date(sale.created_at), "HH:mm")} • KSh {Math.round(sale.total_amount).toLocaleString()}
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteSale(sale.id)}
-                    disabled={deletingIds.has(sale.id)}
-                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    {deletingIds.has(sale.id) ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                    ) : (
-                      <Trash2 className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
 
         </div>
       </div>
