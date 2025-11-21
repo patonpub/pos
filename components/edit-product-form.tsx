@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { updateProduct, getSuppliers, getProductCategories } from "@/lib/database"
+import { updateProduct, getSuppliers } from "@/lib/database"
 import type { Product, Supplier } from "@/lib/database-types"
 import { useAuth } from "@/contexts/auth-context"
 import { toast } from "sonner"
+import { PRODUCT_CATEGORIES } from "@/lib/constants"
 
 interface EditProductFormProps {
   product: Product
@@ -32,13 +33,13 @@ export function EditProductForm({ product, onClose, onSuccess }: EditProductForm
     unit: product.unit,
   })
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
-  const [categories, setCategories] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false)
 
+  const categories = Array.from(PRODUCT_CATEGORIES)
+
   useEffect(() => {
     loadSuppliers()
-    loadCategories()
   }, [])
 
   const loadSuppliers = async () => {
@@ -47,15 +48,6 @@ export function EditProductForm({ product, onClose, onSuccess }: EditProductForm
       setSuppliers(data)
     } catch (error) {
       console.error("Failed to load suppliers:", error)
-    }
-  }
-
-  const loadCategories = async () => {
-    try {
-      const data = await getProductCategories()
-      setCategories(data)
-    } catch (error) {
-      console.error("Failed to load categories:", error)
     }
   }
 

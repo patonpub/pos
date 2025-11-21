@@ -41,23 +41,9 @@ import type { Product, Supplier } from "@/lib/database-types"
 import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useConfirm } from "@/hooks/use-confirm"
+import { PRODUCT_CATEGORIES } from "@/lib/constants"
 
-const categories = [
-  "All",
-  "Soft drinks",
-  "Whiskey",
-  "Vodka",
-  "Rum",
-  "Liquor",
-  "Wines",
-  "Shots",
-  "Tecquilla",
-  "Cocktails",
-  "Beer",
-  "Cognac",
-  "Gin",
-  "Brandy"
-]
+const categories = ["All", ...PRODUCT_CATEGORIES]
 
 function InventoryContent() {
   const { isOwner } = useAuth()

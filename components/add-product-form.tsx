@@ -9,10 +9,11 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus } from "lucide-react"
-import { createProduct, getSuppliers, getProductCategories } from "@/lib/database"
+import { createProduct, getSuppliers } from "@/lib/database"
 import type { Supplier } from "@/lib/database-types"
 import { useAuth } from "@/contexts/auth-context"
 import { toast } from "sonner"
+import { PRODUCT_CATEGORIES } from "@/lib/constants"
 
 interface AddProductFormProps {
   onClose: () => void
@@ -35,10 +36,11 @@ export function AddProductForm({ onClose, onSuccess }: AddProductFormProps) {
   }
   const [formData, setFormData] = useState(initialFormData)
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
-  const [categories, setCategories] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false)
+
+  const categories = Array.from(PRODUCT_CATEGORIES)
 
   const resetForm = () => {
     setFormData(initialFormData)
@@ -46,7 +48,6 @@ export function AddProductForm({ onClose, onSuccess }: AddProductFormProps) {
 
   useEffect(() => {
     loadSuppliers()
-    loadCategories()
   }, [])
 
   const loadSuppliers = async () => {
@@ -55,15 +56,6 @@ export function AddProductForm({ onClose, onSuccess }: AddProductFormProps) {
       setSuppliers(data)
     } catch (error) {
       console.error("Failed to load suppliers:", error)
-    }
-  }
-
-  const loadCategories = async () => {
-    try {
-      const data = await getProductCategories()
-      setCategories(data)
-    } catch (error) {
-      console.error("Failed to load categories:", error)
     }
   }
 
