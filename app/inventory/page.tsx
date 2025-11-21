@@ -54,7 +54,9 @@ const categories = [
   "Tecquilla",
   "Cocktails",
   "Beer",
-  "Cognac"
+  "Cognac",
+  "Gin",
+  "Brandy"
 ]
 
 function InventoryContent() {
