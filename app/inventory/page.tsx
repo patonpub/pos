@@ -22,7 +22,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Plus, Search, Package, AlertTriangle, Edit, Trash2, Eye, DollarSign, TrendingUp, Upload, RefreshCw, Minus } from "lucide-react"
+import { Plus, Search, Package, AlertTriangle, Edit, Trash2, Eye, DollarSign, TrendingUp, Upload, RefreshCw, Minus, Download, FileText, FileSpreadsheet } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import Papa from "papaparse"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 import { AddProductForm } from "@/components/add-product-form"
 import { EditProductForm } from "@/components/edit-product-form"
 import { InventoryImport } from "@/components/inventory-import"
@@ -295,6 +304,88 @@ function InventoryContent() {
     }
   }
 
+  const handleExportCSV = () => {
+    try {
+      const exportData = filteredProducts.map(product => ({
+        Name: product.name,
+        Category: product.category,
+        Supplier: getSupplierName(product.supplier_id),
+        "Stock Quantity": product.stock_quantity,
+        Unit: product.unit,
+        "Min Stock Level": product.min_stock_level,
+        "Cost Price": product.cost_price,
+        "Selling Price": product.unit_price,
+        Status: getStockStatus(product).label,
+        "Stock Value": product.stock_quantity * product.cost_price,
+        "Potential Revenue": product.stock_quantity * product.unit_price,
+      }))
+
+      const csv = Papa.unparse(exportData)
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+      const link = document.createElement("a")
+      const url = URL.createObjectURL(blob)
+
+      link.setAttribute("href", url)
+      link.setAttribute("download", `inventory_${new Date().toISOString().split('T')[0]}.csv`)
+      link.style.visibility = "hidden"
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      toast.success("CSV exported successfully!")
+    } catch (error) {
+      console.error("Failed to export CSV:", error)
+      toast.error("Failed to export CSV")
+    }
+  }
+
+  const handleExportPDF = () => {
+    try {
+      const doc = new jsPDF()
+
+      // Add title
+      doc.setFontSize(16)
+      doc.text("Inventory Report", 14, 15)
+
+      // Add date
+      doc.setFontSize(10)
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 22)
+
+      // Add stats
+      doc.text(`Total Items: ${stats.totalItems}`, 14, 28)
+      doc.text(`Inventory Value: KSh ${Math.round(stats.inventoryValue).toLocaleString()}`, 14, 34)
+      doc.text(`Potential Value: KSh ${Math.round(stats.potentialValue).toLocaleString()}`, 14, 40)
+
+      // Prepare table data
+      const tableData = filteredProducts.map(product => [
+        product.name,
+        product.category,
+        getSupplierName(product.supplier_id),
+        `${product.stock_quantity} ${product.unit}`,
+        `KSh ${Math.round(product.cost_price).toLocaleString()}`,
+        `KSh ${Math.round(product.unit_price).toLocaleString()}`,
+        getStockStatus(product).label,
+      ])
+
+      // Add table
+      autoTable(doc, {
+        startY: 46,
+        head: [["Product", "Category", "Supplier", "Stock", "Cost", "Selling", "Status"]],
+        body: tableData,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [59, 130, 246] },
+      })
+
+      // Save the PDF
+      doc.save(`inventory_${new Date().toISOString().split('T')[0]}.pdf`)
+
+      toast.success("PDF exported successfully!")
+    } catch (error) {
+      console.error("Failed to export PDF:", error)
+      toast.error("Failed to export PDF")
+    }
+  }
+
   return (
     <DashboardLayout currentPage="inventory">
       <div className="space-y-6">
@@ -356,6 +447,24 @@ function InventoryContent() {
                 <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
                 {refreshing ? 'Refreshing...' : 'Refresh'}
               </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full sm:w-auto">
+                    <Download className="mr-2 h-4 w-4" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleExportCSV}>
+                    <FileSpreadsheet className="mr-2 h-4 w-4" />
+                    Export as CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportPDF}>
+                    <FileText className="mr-2 h-4 w-4" />
+                    Export as PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
