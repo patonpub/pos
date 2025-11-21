@@ -315,6 +315,7 @@ function InventoryContent() {
         "Min Stock Level": product.min_stock_level,
         "Cost Price": product.cost_price,
         "Selling Price": product.unit_price,
+        Actual: "",
         Status: getStockStatus(product).label,
         "Stock Value": product.stock_quantity * product.cost_price,
         "Potential Revenue": product.stock_quantity * product.unit_price,
@@ -362,6 +363,7 @@ function InventoryContent() {
         product.category,
         getSupplierName(product.supplier_id),
         `${product.stock_quantity} ${product.unit}`,
+        "", // Blank column for actual
         getStockStatus(product).label,
         "", // Blank column for manual entry
       ])
@@ -369,12 +371,12 @@ function InventoryContent() {
       // Add table
       autoTable(doc, {
         startY: 46,
-        head: [["Product", "Category", "Supplier", "Stock", "Status", "Notes"]],
+        head: [["Product", "Category", "Supplier", "Stock", "Actual", "Status", "Notes"]],
         body: tableData,
         styles: { fontSize: 8 },
         headStyles: { fillColor: [59, 130, 246] },
         columnStyles: {
-          5: { cellWidth: 30 } // Make the Notes column wider for writing
+          6: { cellWidth: 30 } // Make the Notes column wider for writing
         }
       })
 
