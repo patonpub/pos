@@ -1,0 +1,294 @@
+DATE FILTER INTEGRATION WITH OPTIMIZED FUNCTIONS
+
+OVERVIEW
+========
+The optimized database functions work seamlessly with the app's existing date filter system. The date filter context returns dates in YYYY-MM-DD format, which the functions convert to proper timestamps.
+
+HOW IT WORKS
+============
+
+1. Date Filter Context (contexts/date-filter-context.tsx):
+   - Provides dateRange state management
+   - getFormattedDateRange() returns: { startDate: "2025-01-01", endDate: "2025-01-31" }
+   - Format: YYYY-MM-DD strings
+
+2. Optimized Functions (lib/database.ts):
+   - Accept date strings in YYYY-MM-DD format
+   - Automatically convert to full timestamps: "2025-01-01T00:00:00.000Z"
+   - Pass to database functions which handle timestamptz type
+
+3. Database Functions (SQL):
+   - Accept timestamptz parameters (start_date, end_date)
+   - Filter records using standard timestamp comparison
+   - Return aggregated results
+
+USAGE EXAMPLES
+==============
+
+Example 1: Dashboard Page with Date Filter
+-------------------------------------------
+
+```typescript
+// app/page.tsx
+import { getDashboardStatsOptimized } from '@/lib/database'
+import { useDateFilter } from '@/contexts/date-filter-context'
+
+function DashboardContent() {
+  const { getFormattedDateRange } = useDateFilter()
+  const [stats, setStats] = useState(null)
+
+  useEffect(() => {
+    async function loadStats() {
+      const { startDate, endDate } = getFormattedDateRange()
+      const data = await getDashboardStatsOptimized(startDate, endDate)
+      setStats(data)
+    }
+    loadStats()
+  }, [getFormattedDateRange])
+
+  return (
+    <div>
+      <h1>Total Sales: {stats?.totalSales}</h1>
+      <h1>Total Revenue: KSh {stats?.totalRevenue}</h1>
+      {/* ... */}
+    </div>
+  )
+}
+```
+
+Example 2: Reports Page with Date Range Picker
+-----------------------------------------------
+
+```typescript
+// app/reports/page.tsx
+import {
+  getReportStatsOptimized,
+  getTopProductsOptimized,
+  getSalesByCategoryOptimized,
+  getSalesByDateOptimized
+} from '@/lib/database'
+
+function ReportsContent() {
+  const [dateRange, setDateRange] = useState({
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date())
+  })
+
+  useEffect(() => {
+    async function loadReports() {
+      const startDate = dateRange.from.toISOString().split('T')[0]
+      const endDate = dateRange.to.toISOString().split('T')[0]
+
+      // All these work with the same date format
+      const [stats, topProducts, categoryData, dailyData] = await Promise.all([
+        getReportStatsOptimized(startDate, endDate),
+        getTopProductsOptimized(startDate, endDate, 10),
+        getSalesByCategoryOptimized(startDate, endDate),
+        getSalesByDateOptimized(startDate, endDate)
+      ])
+
+      // Use the data...
+    }
+    loadReports()
+  }, [dateRange])
+
+  return (/* Report UI */)
+}
+```
+
+Example 3: Store Integration
+-----------------------------
+
+```typescript
+// stores/sales-store.ts
+import { getDashboardStatsOptimized } from '@/lib/database'
+
+export const useSalesStore = create<SalesStore>((set) => ({
+  dashboardStats: null,
+
+  fetchDashboardStats: async (startDate?: string, endDate?: string) => {
+    try {
+      // Works with date filter format (YYYY-MM-DD) or undefined
+      const stats = await getDashboardStatsOptimized(startDate, endDate)
+      set({ dashboardStats: stats })
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error)
+      throw error
+    }
+  }
+}))
+```
+
+DATE FORMAT CONVERSION FLOW
+============================
+
+User selects dates in UI
+  ↓
+DateFilterContext: { from: Date, to: Date }
+  ↓
+getFormattedDateRange(): { startDate: "2025-01-01", endDate: "2025-01-31" }
+  ↓
+Optimized function: getDashboardStatsOptimized(startDate, endDate)
+  ↓
+Converts to: { start_date: "2025-01-01T00:00:00.000Z", end_date: "2025-01-31T23:59:59.999Z" }
+  ↓
+Database function: get_dashboard_stats(start_date, end_date)
+  ↓
+SQL WHERE clause: created_at >= start_date AND created_at <= end_date
+  ↓
+Returns aggregated results
+
+HANDLING OPTIONAL DATES
+========================
+
+All optimized functions support optional date parameters:
+
+No dates (all-time data):
+```typescript
+const stats = await getDashboardStatsOptimized()
+// Returns stats for all sales in database
+```
+
+Only start date:
+```typescript
+const stats = await getDashboardStatsOptimized("2025-01-01")
+// Returns stats from Jan 1, 2025 to today
+```
+
+Both dates:
+```typescript
+const stats = await getDashboardStatsOptimized("2025-01-01", "2025-01-31")
+// Returns stats for January 2025
+```
+
+TIMEZONE CONSIDERATIONS
+=======================
+
+The functions handle timezones correctly:
+
+1. Dates are converted to UTC with time component:
+   - Start date: 00:00:00.000Z (beginning of day)
+   - End date: 23:59:59.999Z (end of day)
+
+2. Database stores timestamps in UTC (timestamptz type)
+
+3. Results are timezone-agnostic (counts and sums don't depend on timezone)
+
+4. For display, dates are formatted in user's local timezone by the UI
+
+TESTING DATE FILTERS
+=====================
+
+Test the integration:
+
+```typescript
+// Test with different date ranges
+test('filters by single day', async () => {
+  const stats = await getDashboardStatsOptimized('2025-01-15', '2025-01-15')
+  expect(stats.totalSales).toBeGreaterThanOrEqual(0)
+})
+
+test('filters by month', async () => {
+  const stats = await getDashboardStatsOptimized('2025-01-01', '2025-01-31')
+  expect(stats).toBeDefined()
+})
+
+test('works with no dates (all time)', async () => {
+  const stats = await getDashboardStatsOptimized()
+  expect(stats).toBeDefined()
+})
+```
+
+COMMON DATE FILTER PATTERNS
+============================
+
+Today only:
+```typescript
+const today = new Date().toISOString().split('T')[0]
+const stats = await getDashboardStatsOptimized(today, today)
+```
+
+Last 7 days:
+```typescript
+const endDate = new Date()
+const startDate = subDays(endDate, 7)
+const stats = await getDashboardStatsOptimized(
+  startDate.toISOString().split('T')[0],
+  endDate.toISOString().split('T')[0]
+)
+```
+
+Current month:
+```typescript
+const start = startOfMonth(new Date())
+const end = endOfMonth(new Date())
+const stats = await getDashboardStatsOptimized(
+  start.toISOString().split('T')[0],
+  end.toISOString().split('T')[0]
+)
+```
+
+Last month:
+```typescript
+const lastMonth = subMonths(new Date(), 1)
+const start = startOfMonth(lastMonth)
+const end = endOfMonth(lastMonth)
+const stats = await getDashboardStatsOptimized(
+  start.toISOString().split('T')[0],
+  end.toISOString().split('T')[0]
+)
+```
+
+MIGRATION FROM OLD TO NEW
+==========================
+
+Before (with row limits):
+```typescript
+const { startDate, endDate } = getFormattedDateRange()
+const stats = await getDashboardStats(startDate, endDate)
+// Limited to counting fetched rows
+```
+
+After (unlimited):
+```typescript
+const { startDate, endDate } = getFormattedDateRange()
+const stats = await getDashboardStatsOptimized(startDate, endDate)
+// Counts all matching records in database
+```
+
+The API is the same! Just swap the function name.
+
+PERFORMANCE WITH DATE FILTERS
+==============================
+
+Date filtering in database is very efficient:
+
+1. Indexes on created_at columns make filtering fast
+2. Database only scans relevant date range
+3. Aggregation happens on filtered subset
+4. Much faster than filtering in application code
+
+Recommended indexes:
+```sql
+CREATE INDEX idx_sales_created_at ON sales(created_at) WHERE status = 'completed';
+CREATE INDEX idx_sales_date_status ON sales(created_at, status);
+```
+
+BACKWARDS COMPATIBILITY
+=======================
+
+The old functions still work:
+- getDashboardStats() - with row limits
+- getSalesReport() - with row limits
+
+New optimized functions:
+- getDashboardStatsOptimized() - unlimited
+- getReportStatsOptimized() - unlimited
+
+Both accept the same date format from date filter context!
+
+You can gradually migrate:
+1. Keep old functions for now
+2. Test optimized versions alongside
+3. Switch to optimized when ready
+4. Remove old functions later

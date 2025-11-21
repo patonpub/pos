@@ -1,0 +1,94 @@
+SUPABASE AUTHENTICATION SETUP
+
+This guide will help you set up Supabase authentication for the Tushop application.
+
+PREREQUISITES
+
+1. A Supabase account (sign up at supabase.com)
+2. A new Supabase project created
+
+SETUP STEPS
+
+1. Create a New Supabase Project
+
+1. Go to https://app.supabase.com
+2. Click "New project"
+3. Choose your organization
+4. Fill in your project details:
+   - Name: tushop (or your preferred name)
+   - Database Password: Create a strong password
+   - Region: Choose the closest to your users
+5. Click "Create new project"
+6. Wait for the project to be set up (usually takes 1-2 minutes)
+
+2. Get Your Project Credentials
+
+1. In your Supabase project dashboard, go to Settings > API
+2. Copy the following values:
+   - Project URL (looks like: https://your-project-id.supabase.co)
+   - Project API Key (anon, public key)
+
+3. Configure Environment Variables
+
+1. In your project root, update the .env.local file:
+
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+
+Replace your-supabase-project-url and your-supabase-anon-key with the values from step 2.
+
+4. Set Up Database Schema
+
+1. In your Supabase project dashboard, go to the SQL Editor
+2. Copy and paste the contents of supabase/migrations/001_create_user_profiles.sql
+3. Click "Run" to execute the SQL
+
+This will create:
+- A user_profiles table to store user roles
+- Row Level Security (RLS) policies for data protection
+- A trigger to automatically create user profiles when admins add users
+
+5. Disable Self-Signup and Create Users
+
+1. In your Supabase project dashboard, go to Authentication > Settings
+2. Under "User Signups", disable "Enable email signups" (users created by admin only)
+3. Under "Site URL", add your application URL:
+   - For development: http://localhost:3000
+   - For production: Your deployed app URL
+
+6. Create Your First Owner Account
+
+1. In Supabase dashboard, go to Authentication > Users
+2. Click "Invite user" or "Create user"
+3. Enter email and temporary password
+4. The user profile will be automatically created with "employee" role
+5. Go to Table Editor > user_profiles
+6. Find the new user and change role from "employee" to "owner"
+7. Users will receive login credentials via email
+
+7. User Roles Explained
+
+- Owner: Full access to all features including suppliers, expenses, assets, debtors, and reports
+- Employee: Limited access to inventory, sales, purchases, and breakages
+
+TESTING THE SETUP
+
+1. Create a test employee account through Supabase dashboard
+2. Test login with created credentials
+3. Verify that navigation items are filtered based on user roles
+4. Test login/logout functionality
+5. Verify that role-based access control is working
+
+TROUBLESHOOTING
+
+- "Invalid email or password": Make sure you've verified your email
+- Environment variables not loading: Restart your development server after updating .env.local
+- Database errors: Check that the migration SQL was executed successfully
+- Authentication errors: Verify your Supabase URL and API key are correct
+
+SECURITY NOTES
+
+- Never commit your .env.local file to version control
+- The anon key is safe to use in client-side code
+- RLS policies ensure users can only access their own data
+- The database trigger automatically creates profiles with employee role by default

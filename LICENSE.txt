@@ -1,0 +1,36 @@
+LICENSE AGREEMENT
+
+By purchasing, downloading, or using the Software (defined as the templates, starter kits, components, and all associated source code),
+you (the Licensee) agree to be bound by the terms of this License Agreement.
+
+1. GRANT OF LICENSE
+Tapiwanashe Mlambo grants you a non-exclusive, non-transferable, lifetime license to use, modify, and integrate the Software into a single
+End Product (for example, a website, web application, or mobile app).
+
+2. PERMITTED USES AND MODIFICATION RIGHTS
+- You are granted full rights to modify, edit, and create derivative works from the Software.
+- You may use the End Product created with the Software for personal or commercial purposes.
+- You may use the End Product for projects that generate revenue for you or your clients.
+
+3. RESTRICTIONS ON DISTRIBUTION AND RESALE (NO STANDALONE DISTRIBUTION)
+The following actions are strictly prohibited:
+- You may not distribute, sell, sublicense, transfer, share, or give away the original Software or any modified version of the Software
+  (including templates, code, or components) on a standalone basis.
+- You may not use the Software to create a competing product, template, or starter kit for sale or distribution.
+- The Software must only be distributed when embedded within a larger, finished End Product (for example, a completed website delivered
+  to a client or a deployed application).
+
+4. ATTRIBUTION
+No attribution is required. You are not required to credit Tapiwanashe Mlambo in the final End Product.
+You may remove all references to the original copyright holder from the files.
+
+5. OWNERSHIP
+Tapiwanashe Mlambo retains the copyright to the original Software (including templates, source code, and assets).
+You retain ownership of the final End Product you create using the Software.
+
+6. WARRANTY DISCLAIMER
+The Software is provided “as is,” without warranty of any kind, express or implied, including but not limited to warranties of
+merchantability, fitness for a particular purpose, and noninfringement. In no event shall Tapiwanashe Mlambo be liable for any claim,
+damages, or other liability arising from the use or inability to use the Software.
+
+END OF LICENSE AGREEMENT
