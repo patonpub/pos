@@ -362,18 +362,20 @@ function InventoryContent() {
         product.category,
         getSupplierName(product.supplier_id),
         `${product.stock_quantity} ${product.unit}`,
-        `KSh ${Math.round(product.cost_price).toLocaleString()}`,
-        `KSh ${Math.round(product.unit_price).toLocaleString()}`,
         getStockStatus(product).label,
+        "", // Blank column for manual entry
       ])
 
       // Add table
       autoTable(doc, {
         startY: 46,
-        head: [["Product", "Category", "Supplier", "Stock", "Cost", "Selling", "Status"]],
+        head: [["Product", "Category", "Supplier", "Stock", "Status", "Notes"]],
         body: tableData,
         styles: { fontSize: 8 },
         headStyles: { fillColor: [59, 130, 246] },
+        columnStyles: {
+          5: { cellWidth: 30 } // Make the Notes column wider for writing
+        }
       })
 
       // Save the PDF
