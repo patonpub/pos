@@ -35,20 +35,17 @@ import { useConfirm } from "@/hooks/use-confirm"
 
 const categories = [
   "All",
-  "Beverage",
-  "Dairy products",
-  "Bread and pastries",
-  "Candy",
-  "Biscuits",
-  "Crisps and bites",
-  "Nuts",
-  "Chewing gums",
-  "Eggs",
-  "Toiletries",
-  "Flour",
-  "House hold consumerables",
-  "Cigarettes",
-  "Medication"
+  "Soft drinks",
+  "Whiskey",
+  "Vodka",
+  "Rum",
+  "Liquor",
+  "Wines",
+  "Shots",
+  "Tecquilla",
+  "Cocktails",
+  "Beer",
+  "Cognac"
 ]
 
 function InventoryContent() {
